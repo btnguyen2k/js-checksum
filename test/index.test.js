@@ -1,17 +1,100 @@
-import {sayHello} from '../src/index.js'
+import {checksum} from '../src/index.js'
 
-describe('sayHello', () => {
+const hashAlgos = ['md5', 'sha1', 'sha256', 'sha512', 'dummy', null, undefined]
+const optsList = []
+for (const algo of hashAlgos) {
+  optsList.push({hash: algo})
+}
+optsList.push(null, undefined, '')
+
+describe('checksum', () => {
   beforeEach(() => {
     // Reset options before each test.
-    console.log('DEBUG - beforeEach')
   })
 
   afterEach(() => {
     // Reset options after each test.
-    console.log('DEBUG - afterEach')
   })
 
-  test('demo', () => {
-    expect(sayHello('demo')).toEqual('Hello demo')
+  test('undefined should return empty string', () => {
+    for (const opts of optsList) {
+      expect(checksum(undefined, opts)).toEqual('')
+    }
+  })
+
+  test('null should return empty string', () => {
+    for (const opts of optsList) {
+      expect(checksum(null, opts)).toEqual('')
+    }
+  })
+
+  test('boolean must have different checksum from number', () => {
+    for (const opts of optsList) {
+      expect(checksum(true, opts)).not.toEqual(checksum(1, opts))
+    }
+  })
+
+  test('boolean must have different checksum from string', () => {
+    for (const opts of optsList) {
+      expect(checksum(true, opts)).not.toEqual(checksum('true', opts))
+    }
+  })
+
+  test('numbers (int, float, bigint) should have same checksum', () => {
+    for (const opts of optsList) {
+      expect(checksum(1, opts)).toEqual(checksum(1.0, opts))
+      expect(checksum(1, opts)).toEqual(checksum(1n, opts))
+      expect(checksum(1.0, opts)).toEqual(checksum(1n, opts))
+
+      expect(checksum(1, opts)).not.toEqual(checksum(1.1, opts))
+      expect(checksum(1.0, opts)).not.toEqual(checksum(1.1, opts))
+    }
+  })
+
+  test('number and string must have different checksums', () => {
+    for (const opts of optsList) {
+      expect(checksum(1, opts)).not.toEqual(checksum('1', opts))
+    }
+  })
+
+  test('checksum of symbols is based on description', () => {
+    for (const opts of optsList) {
+      expect(checksum(Symbol(1), opts)).toEqual(checksum(Symbol(1), opts))
+      expect(checksum(Symbol(1), opts)).toEqual(checksum(Symbol(1.0), opts))
+      expect(checksum(Symbol(1), opts)).toEqual(checksum(Symbol(1n), opts))
+      expect(checksum(Symbol('1'), opts)).toEqual(checksum(Symbol('1'), opts))
+      expect(checksum(Symbol(1), opts)).toEqual(checksum(Symbol('1'), opts))
+      expect(checksum(Symbol('1.0'), opts)).not.toEqual(checksum(Symbol('1'), opts))
+    }
+  })
+
+  test('function and string must have different checksums', () => {
+    for (const opts of optsList) {
+      const f = (name) => { return 'hello ' + name }
+      const s = `${f}`
+      expect(checksum(f, opts)).not.toEqual(checksum(s, opts))
+    }
+  })
+
+  test('array', () => {
+    for (const opts of optsList) {
+      const a1 = [1, 1.0, true, null]
+      const a2 = [1.0, 1, true, undefined]
+      const a3 = [1.0, '1', true, undefined]
+      expect(checksum(a1, opts)).toEqual(checksum(a2, opts))
+      expect(checksum(a1, opts)).not.toEqual(checksum(a3, opts))
+      expect(checksum(a2, opts)).not.toEqual(checksum(a3, opts))
+    }
+  })
+
+  test('object checksum must not be affected by order of keys', () => {
+    for (const opts of optsList) {
+      const o1 = {a: 1, b: '2', c: true}
+      const o2 = {b: '2', c: true, a: 1.0}
+      const o3 = {c: true, a: '1', b: '2'}
+      expect(checksum(o1, opts)).toEqual(checksum(o2, opts))
+      expect(checksum(o1, opts)).not.toEqual(checksum(o3, opts))
+      expect(checksum(o2, opts)).not.toEqual(checksum(o3, opts))
+    }
   })
 })
