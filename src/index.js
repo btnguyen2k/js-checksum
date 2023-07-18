@@ -14,6 +14,7 @@ const prefixSymbol = '\x12'
 const prefixFunction = '\x13'
 const prefixArray = '\x14'
 const prefixObject = '\x15'
+const prefixBuiltin = '\x16'
 
 /**
  * Calculate checksum value from a given value.
@@ -70,7 +71,7 @@ function checksum(value, opts = {}) {
     case 'object': {
       if (Array.isArray(value)) {
         if (isDebugMode) {
-          console.log(`\t[DEBUG]value <${value}> is an array`)
+          console.log(`\t[DEBUG] value <${value}> is an array`)
         }
         let hashValue = hashFunc(`${prefixArray}[]`)
         for (const el of value) {
@@ -79,28 +80,47 @@ function checksum(value, opts = {}) {
         return hashValue
       }
       const className = value.constructor.name
-      if (isDebugMode) {
-        console.log(`\t[DEBUG]value <${value}> is an object <${className}>`)
+      const _checksumBuiltInObject = _checksumBuiltinObject(hashFunc, className, value, opts)
+      if (_checksumBuiltInObject) {
+        if (isDebugMode) {
+          console.log(`\t[DEBUG] value <${value}> is built-in object of class <${className}>`)
+        }
+        return _checksumBuiltInObject
       }
-      const allKeys = Object.keys(value)
-      const simpleObjAllKeys = {}
-      allKeys.forEach(key => {
-        simpleObjAllKeys[key] = value[key]
-      })
-
-      return checksum([`${prefixObject}${className}`, _checksumSimpleObject(hashFunc, simpleObjAllKeys, opts)], opts)
+      if (isDebugMode) {
+        console.log(`\t[DEBUG] value <${value}> is an object of class <${className}>, keys <${Object.getOwnPropertyNames(value)}>`)
+      }
+      const hashArr = []
+      for (const key of Object.getOwnPropertyNames(value)) {
+        hashArr.push(checksum([key, value[key]], opts))
+      }
+      return checksum([`${prefixObject}${className}`, ...hashArr.sort()], opts)
     }
   }
-  // return hashFunc(value)
+  return hashFunc(value)
 }
 
-function _checksumSimpleObject(hashFunc, obj, opts) {
-  let hashValue = hashFunc(`${prefixArray}{}`)
-  for (const key of Object.keys(obj).sort()) {
-    const tempHashValue = checksum([key, obj[key]], opts)
-    hashValue = hashFunc(`${hashValue}${tempHashValue}`)
+function _checksumBuiltinObject(hashFunc, className, obj, opts) {
+  switch (className) {
+    case 'Date':
+    case 'RegExp':
+      return hashFunc(`${prefixBuiltin}${className}${obj}`)
+    case 'Map': {
+      const hashArr = []
+      for (const [k, v] of obj) {
+        hashArr.push(checksum([k, v], opts))
+      }
+      return checksum([`${prefixObject}${className}`, ...hashArr.sort()], opts)
+    }
+    case 'Set': {
+      const hashArr = []
+      for (const item of obj) {
+        hashArr.push(checksum(item, opts))
+      }
+      return checksum([`${prefixObject}${className}`, ...hashArr.sort()], opts)
+    }
   }
-  return hashValue
+  return false
 }
 
 export {

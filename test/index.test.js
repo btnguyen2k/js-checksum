@@ -6,7 +6,7 @@ for (const algo of hashAlgos) {
   if (algo === 'md5') {
     optsList.push({hash: algo, DEBUG: true})
   } else {
-    optsList.push({hash: algo})
+    optsList.push({hash: algo, DEBUG: false})
   }
 }
 optsList.push(null, undefined, '')
@@ -44,7 +44,7 @@ describe('checksum', () => {
     }
   })
 
-  test('numbers (int, float, bigint) should have same checksum', () => {
+  test('numbers (int, float, bigint) must have same checksum', () => {
     for (const opts of optsList) {
       expect(checksum(1, opts)).toEqual(checksum(1.0, opts))
       expect(checksum(1, opts)).toEqual(checksum(1n, opts))
@@ -72,7 +72,15 @@ describe('checksum', () => {
     }
   })
 
-  test('checksum of symbols is based on description', () => {
+  test('function and string must have different checksums', () => {
+    for (const opts of optsList) {
+      const f = (name) => { return 'hello ' + name }
+      const s = `${f}`
+      expect(checksum(f, opts)).not.toEqual(checksum(s, opts))
+    }
+  })
+
+  test('Symbol', () => {
     for (const opts of optsList) {
       expect(checksum(Symbol(1), opts)).toEqual(checksum(Symbol(1), opts))
       expect(checksum(Symbol(1), opts)).toEqual(checksum(Symbol(1.0), opts))
@@ -83,11 +91,121 @@ describe('checksum', () => {
     }
   })
 
-  test('function and string must have different checksums', () => {
+  test('Error', () => {
     for (const opts of optsList) {
-      const f = (name) => { return 'hello ' + name }
-      const s = `${f}`
-      expect(checksum(f, opts)).not.toEqual(checksum(s, opts))
+      const e1 = new Error('error')
+      const e2 = new Error('error-')
+      const e3 = new Error('error')
+      const e4 = e2
+      expect(checksum(e2, opts)).toEqual(checksum(e4, opts))
+      expect(checksum(e1, opts)).not.toEqual(checksum(e2, opts))
+      expect(checksum(e1, opts)).not.toEqual(checksum(e3, opts))
+      expect(checksum(e2, opts)).not.toEqual(checksum(e3, opts))
+    }
+  })
+
+  test('Date', () => {
+    for (const opts of optsList) {
+      const d1 = new Date()
+      d1.setDate(1)
+      const d2 = d1
+      const d3 = new Date()
+      d3.setDate(3)
+      expect(checksum(d1, opts)).toEqual(checksum(d2, opts))
+      expect(checksum(d2, opts)).not.toEqual(checksum(d3, opts))
+      expect(checksum(d1, opts)).not.toEqual(checksum(d3, opts))
+    }
+  })
+
+  test('String', () => {
+    for (const opts of optsList) {
+      const s1 = 'hello'
+      const s2 = String('hello')
+      expect(checksum(s1, opts)).toEqual(checksum(s2, opts))
+    }
+  })
+
+  test('RegExp', () => {
+    for (const opts of optsList) {
+      const r1 = /hello/
+      const r2 = /hello/i
+      /* eslint prefer-regex-literals: "off" */
+      const r3 = new RegExp('hello')
+      expect(checksum(r1, opts)).not.toEqual(checksum(r2, opts))
+      expect(checksum(r1, opts)).toEqual(checksum(r3, opts))
+      expect(checksum(r2, opts)).not.toEqual(checksum(r3, opts))
+    }
+  })
+
+  test('Map', () => {
+    for (const opts of optsList) {
+      const m1 = new Map()
+      m1.set({k: 'a'}, 1)
+      m1.set({k: 'b'}, '2')
+      m1.set({k: 'c'}, true)
+      const m2 = new Map()
+      m2.set({k: 'c'}, true)
+      m2.set({k: 'a'}, 1.0)
+      m2.set({k: 'b'}, '2')
+      const m3 = new Map()
+      m3.set({k: 'a'}, '1')
+      m3.set({k: 'b'}, '2')
+      m3.set({k: 'c'}, true)
+      expect(checksum(m1, opts)).toEqual(checksum(m2, opts))
+      expect(checksum(m1, opts)).not.toEqual(checksum(m3, opts))
+      expect(checksum(m2, opts)).not.toEqual(checksum(m3, opts))
+
+      const m4 = new Map()
+      m4.set({k: 'a'}, 1)
+      m4.set({k: 'b'}, '2')
+      m4.set({k: 'd'}, true)
+      expect(checksum(m1, opts)).not.toEqual(checksum(m4, opts))
+      expect(checksum(m2, opts)).not.toEqual(checksum(m4, opts))
+      expect(checksum(m3, opts)).not.toEqual(checksum(m4, opts))
+    }
+  })
+
+  test('Map vs base Object', () => {
+    for (const opts of optsList) {
+      const m1 = new Map()
+      m1.set('a', 1)
+      m1.set('b', '2')
+      m1.set('c', true)
+      const m2 = {a: 1, b: '2', c: true}
+      expect(checksum(m1, opts)).not.toEqual(checksum(m2, opts))
+    }
+  })
+
+  test('Set', () => {
+    for (const opts of optsList) {
+      const s1 = new Set([1, '2', true])
+      const s2 = new Set(['2', true, 1.0])
+      const s3 = new Set([true, 1n, '2'])
+      expect(checksum(s1, opts)).toEqual(checksum(s2, opts))
+      expect(checksum(s1, opts)).toEqual(checksum(s3, opts))
+
+      const s4 = new Set([1, '2', false])
+      expect(checksum(s1, opts)).not.toEqual(checksum(s4, opts))
+      expect(checksum(s2, opts)).not.toEqual(checksum(s4, opts))
+      expect(checksum(s3, opts)).not.toEqual(checksum(s4, opts))
+    }
+  })
+
+  test('WeakMap is not supported', () => {
+    for (const opts of optsList) {
+      const m1 = new WeakMap()
+      m1.set({k: 'a'}, 1)
+      const m2 = new WeakMap()
+      m1.set({k: 'a'}, 2)
+      expect(checksum(m1, opts)).toEqual(checksum(m2, opts))
+    }
+  })
+
+  test('WeakSet is not supported', () => {
+    for (const opts of optsList) {
+      const s1 = new WeakSet([{k: 'a'}])
+      const s2 = new WeakSet([{k: 'b'}])
+      expect(checksum(s1, opts)).toEqual(checksum(s2, opts))
     }
   })
 

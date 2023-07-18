@@ -21,7 +21,7 @@ jobs:
           node-version: 'lts/*'
       - name: Install Dependencies
         run: npm ci
-      - name: Run Tests 👩🏽‍💻
+      - name: Run Tests
         run: npm run test
 
   Coverage:
@@ -35,7 +35,7 @@ jobs:
           node-version: 'lts/*'
       - name: Install Dependencies
         run: npm ci
-      - name: Run Tests 👩🏽‍💻
+      - name: Run Tests
         run: npm run test:cover
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v3
@@ -51,7 +51,7 @@ jobs:
           node-version: 'lts/*'
       - name: Install Dependencies
         run: npm ci
-      - name: Lint ✨
+      - name: Lint
         run: npm run lint
 
   Build:
@@ -65,5 +65,5 @@ jobs:
           node-version: 'lts/*'
       - name: Install Dependencies
         run: npm ci
-      - name: Build 🗜️
+      - name: Build
         run: npm run build
