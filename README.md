@@ -38,7 +38,7 @@
 
 👉 map and object with the same entries have the same checksum: `checksum(new Map([['a', 1], ['b', 2]])) === checksum({a: 1, b: 2})`.
 
-👉 objects of different classes with the same entries have differnt checksums: `checksum(new Map([['a', 1], ['b', 2]])) !== checksum(new (class {a = 1; b = 2}))`.
+👉 objects of different classes with the same entries have differnt checksums: `checksum(new Map([['a', 1], ['b', 2]])) !== checksum(new (class {a = 1; b = 2})())`.
 
 ## Installation
 
