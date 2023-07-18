@@ -1,7 +1,7 @@
 {
-  "name": "@btnguyen2k/npm-package-template<changeme>",
+  "name": "@btnguyen2k/checksum",
   "version": "0.1.0",
-  "description": "Template for NPM package<changeme>",
+  "description": "Calculate checksum for any Javascript value",
   "type": "module",
   "main": "./lib/index.js",
   "module": "./src/index.js",
@@ -27,19 +27,17 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/btnguyen2k/npm-package-template.git<changeme>"
+    "url": "git+https://github.com/btnguyen2k/js-checksum.git"
   },
   "keywords": [
-    "npm",
-    "template",
-    "<changeme>"
+    "checksum"
   ],
-  "author": "Thanh Nguyen<changeme>",
-  "license": "MIT<changeme>",
+  "author": "Thanh Nguyen",
+  "license": "MIT",
   "bugs": {
-    "url": "https://github.com/btnguyen2k/npm-package-template/issues<changeme>"
+    "url": "https://github.com/btnguyen2k/js-checksum/issues"
   },
-  "homepage": "https://github.com/btnguyen2k/npm-package-template#readme<changeme>",
+  "homepage": "https://github.com/btnguyen2k/js-checksum#readme",
   "dependencies": {
     "crypto-js": "^4.1.1"
   },
