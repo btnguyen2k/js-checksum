@@ -97,4 +97,49 @@ describe('checksum', () => {
       expect(checksum(o2, opts)).not.toEqual(checksum(o3, opts))
     }
   })
+
+  class Base {
+    constructor(a, b, c) {
+      this.a = a
+      this.b = b
+      this.c = c
+    }
+  }
+
+  class Child extends Base {
+    c
+    constructor(a, b, c, createOwn) {
+      super(a, b, c)
+      if (createOwn) {
+        this.c = c
+      }
+    }
+  }
+
+  test('same named class', () => {
+    for (const opts of optsList) {
+      const o1 = new Base(1, '2', true)
+      const o2 = new Base(1.0, '2', true)
+      const o3 = new Base('1', '2', true)
+      expect(checksum(o1, opts)).toEqual(checksum(o2, opts))
+      expect(checksum(o1, opts)).not.toEqual(checksum(o3, opts))
+      expect(checksum(o2, opts)).not.toEqual(checksum(o3, opts))
+    }
+  })
+
+  test('different classes with same properties', () => {
+    for (const opts of optsList) {
+      const o1 = new Base(1, '2', true)
+      const o2 = {a: 1, b: '2', c: true}
+      expect(checksum(o1, opts)).not.toEqual(checksum(o2, opts))
+    }
+  })
+
+  test('child classes', () => {
+    for (const opts of optsList) {
+      const o1 = new Child(1, '2', true, true)
+      const o2 = new Child(1, '2', true, false)
+      expect(checksum(o1, opts)).not.toEqual(checksum(o2, opts))
+    }
+  })
 })

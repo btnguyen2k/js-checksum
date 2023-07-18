@@ -64,22 +64,13 @@ function checksum(value, opts = {}) {
         return hashValue
       }
       const className = value.constructor.name
-
-      const ownKeys = Object.getOwnPropertyNames(value)
-      const simpleObjOwnKeys = {}
-      ownKeys.forEach(key => {
-        simpleObjOwnKeys[key] = value[key]
-      })
-
       const allKeys = Object.keys(value)
       const simpleObjAllKeys = {}
       allKeys.forEach(key => {
         simpleObjAllKeys[key] = value[key]
       })
 
-      return checksum([`${prefixObject}${className}`,
-        _checksumSimpleObject(hashFunc, simpleObjOwnKeys, opts),
-        _checksumSimpleObject(hashFunc, simpleObjAllKeys, opts)], opts)
+      return checksum([`${prefixObject}${className}`, _checksumSimpleObject(hashFunc, simpleObjAllKeys, opts)], opts)
     }
   }
   // return hashFunc(value)
@@ -90,9 +81,6 @@ function _checksumSimpleObject(hashFunc, obj, opts) {
   for (const key of Object.keys(obj).sort()) {
     const tempHashValue = checksum([key, obj[key]], opts)
     hashValue = hashFunc(`${hashValue}${tempHashValue}`)
-    // for (let i = 0; i < hashValue.location; i++) {
-    //   hashValue[i] ^= tempHashValue[i]
-    // }
   }
   return hashValue
 }
