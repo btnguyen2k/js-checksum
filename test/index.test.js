@@ -3,7 +3,11 @@ import {checksum} from '../src/index.js'
 const hashAlgos = ['md5', 'sha1', 'sha256', 'sha512', 'dummy', null, undefined]
 const optsList = []
 for (const algo of hashAlgos) {
-  optsList.push({hash: algo})
+  if (algo === 'md5') {
+    optsList.push({hash: algo, DEBUG: true})
+  } else {
+    optsList.push({hash: algo})
+  }
 }
 optsList.push(null, undefined, '')
 
@@ -48,6 +52,17 @@ describe('checksum', () => {
 
       expect(checksum(1, opts)).not.toEqual(checksum(1.1, opts))
       expect(checksum(1.0, opts)).not.toEqual(checksum(1.1, opts))
+    }
+  })
+
+  test('NaN and Infinity are different', () => {
+    for (const opts of optsList) {
+      const v1 = NaN
+      const v2 = Infinity
+      const v3 = -Infinity
+      expect(checksum(v1, opts)).not.toEqual(checksum(v2, opts))
+      expect(checksum(v1, opts)).not.toEqual(checksum(v3, opts))
+      expect(checksum(v2, opts)).not.toEqual(checksum(v3, opts))
     }
   })
 
