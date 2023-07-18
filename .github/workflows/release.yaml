@@ -2,7 +2,8 @@ name: "Release"
 on:
   # Automatically trigger it there are changes in repo
   pull_request:
-    types: [ closed ]
+    branches: [ main ]
+  push:
     branches: [ main ]
 
   # Allow manually trigger
@@ -56,8 +57,7 @@ jobs:
   Release:
     needs: [ Coverage, Lint, Build ]
     if: |
-      (github.event.pull_request.merged == true || github.event_name == 'workflow_dispatch') &&
-      github.event.repository.fork == false
+      github.event_name == 'workflow_dispatch' || github.event.repository.fork == false
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
@@ -78,6 +78,6 @@ jobs:
           fi
       - name: Release
         env:
-          GITHUB_TOKEN: ${{ secrets.CICD }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: npx semantic-release

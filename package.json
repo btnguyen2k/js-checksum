@@ -27,7 +27,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/btnguyen2k/js-checksum.git"
+    "url": "git+https://github.com/btnguyen2k/js-checksum"
   },
   "keywords": [
     "checksum"
