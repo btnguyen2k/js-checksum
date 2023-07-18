@@ -2,7 +2,7 @@ name: "Automerge"
 on:
   workflow_run:
     workflows:
-      - Release
+      - "All Branches"
     types:
       - completed
 
@@ -11,7 +11,8 @@ jobs:
     runs-on: ubuntu-latest
     if: |
       github.event.workflow_run.event == 'pull_request' &&
-      github.event.workflow_run.conclusion == 'success'
+      github.event.workflow_run.conclusion == 'success' &&
+      github.ref == 'refs/heads/main'
     steps:
       - name: 'Merge PR'
         uses: actions/github-script@v6
