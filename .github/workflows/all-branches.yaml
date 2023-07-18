@@ -37,6 +37,8 @@ jobs:
         run: npm ci
       - name: Run Tests 👩🏽‍💻
         run: npm run test:cover
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v3
 
   Lint:
     runs-on: ubuntu-latest
