@@ -5,9 +5,14 @@ updates:
     schedule:
       interval: "weekly"
       day: "sunday"
+
   - package-ecosystem: "npm"
-    versioning-strategy: "increase-if-necessary"
     directory: "/"
     schedule:
       interval: "weekly"
       day: "sunday"
+    open-pull-requests-limit: 10
+    versioning-strategy: "increase-if-necessary"
+    ignore:
+      - dependency-name: "*"
+        update-types: [ "version-update:semver-major" ] # do not update to major version as it may contain breaking changes
