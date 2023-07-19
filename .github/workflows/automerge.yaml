@@ -1,3 +1,5 @@
+# Automatically merge PR from dependabot
+
 name: "Automerge"
 on:
   workflow_run:
@@ -5,6 +7,10 @@ on:
       - "All Branches"
     types:
       - completed
+
+permissions:
+  contents: write
+  pull-requests: write
 
 jobs:
   Automerge:
@@ -24,12 +30,10 @@ jobs:
               repo: context.repo.repo,
               pull_number: context.payload.workflow_run.pull_requests[0].number,
             });
-            if (!pr.data.title.startsWith('chore(deps-dev):')) {
+            console.log(`Merging PR <${context.payload.workflow_run.pull_requests[0]}> 🕜`);
+            if (pr.data.user.login !== 'dependabot[bot]') {
               console.log('Not Merged 🚫');
-              console.log(`Title '${pr.data.title}' does not start with 'chore(deps-dev):'`);
-            } else if (pr.data.user.login !== 'dependabot[bot]') {
-              console.log('Not Merged 🚫');
-              console.log(`User '${pr.data.user.login}' does not equal 'dependabot[bot]'`);
+              console.log(`User <${pr.data.user.login}> does not equal <dependabot[bot]>`);
             } else {
               await github.rest.pulls.merge({
                 owner: context.repo.owner,

@@ -21,23 +21,15 @@ const prefixBuiltin = '\x16'
  * @param {*} value the value to calculate checksum
  * @param {object|{}} opts optional options
  * @param {string} opts.hash the hash function to use, default is 'md5', available values are 'md5', 'sha1', 'sha256' and 'sha512'
- * @param {string} opts.DEBUG (dev mode only) turn on debug mode
  * @returns {string} the hello message
  */
 function checksum(value, opts = {}) {
   opts = opts || {}
-  const isDebugMode = opts.DEBUG || false
   if (value === undefined || value === null) {
-    if (isDebugMode) {
-      console.log('[DEBUG] value is undefined or null')
-    }
     return ''
   }
   let hashFunc = md5Hash
   if (opts.hash && typeof opts.hash === 'string') {
-    if (isDebugMode) {
-      console.log(`[DEBUG] hash param: <${opts.hash}>`)
-    }
     switch (opts.hash.toLowerCase()) {
       case 'sha1':
         hashFunc = sha1Hash
@@ -53,9 +45,6 @@ function checksum(value, opts = {}) {
     }
   }
   const typ = typeof value
-  if (isDebugMode) {
-    console.log(`[DEBUG] value is of type <${typ}>`)
-  }
   switch (typ) {
     case 'boolean':
       return hashFunc(`${prefixBoolean}${value}`)
@@ -70,9 +59,6 @@ function checksum(value, opts = {}) {
       return hashFunc(`${prefixSymbol}${value.toString()}`)
     case 'object': {
       if (Array.isArray(value)) {
-        if (isDebugMode) {
-          console.log(`\t[DEBUG] value <${value}> is an array`)
-        }
         let hashValue = hashFunc(`${prefixArray}[]`)
         for (const el of value) {
           hashValue = hashFunc(`${hashValue}${checksum(el, opts)}`)
@@ -82,13 +68,7 @@ function checksum(value, opts = {}) {
       const className = value.constructor.name
       const _checksumBuiltInObject = _checksumBuiltinObject(hashFunc, className, value, opts)
       if (_checksumBuiltInObject) {
-        if (isDebugMode) {
-          console.log(`\t[DEBUG] value <${value}> is built-in object of class <${className}>`)
-        }
         return _checksumBuiltInObject
-      }
-      if (isDebugMode) {
-        console.log(`\t[DEBUG] value <${value}> is an object of class <${className}>, keys <${Object.getOwnPropertyNames(value)}>`)
       }
       const hashArr = []
       for (const key of Object.getOwnPropertyNames(value)) {

@@ -1,6 +1,6 @@
 # @btnguyen2k/checksum release notes
 
-## 2023-07-18 - v0.1.0
+## 2023-07-19 - v0.1.0
 
 - Support hash functions `md5`, `sha1`, `sha256` and `sha512`.
 - Support data types:
