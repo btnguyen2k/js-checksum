@@ -1,5 +1,9 @@
 # @btnguyen2k/checksum release notes
 
+## 2023-07-25 - v0.1.2
+
+- Add option to disable cyclic reference warning.
+
 ## 2023-07-25 - v0.1.1
 
 - Fix cyclic references.

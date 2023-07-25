@@ -13,6 +13,7 @@ const sha512Hash = (value) => sha512(value).toString().toLowerCase()
  * @param {*} value the value to calculate checksum
  * @param {object|{}} opts optional options
  * @param {string} opts.hash the hash function to use, default is 'md5', available values are 'md5', 'sha1', 'sha256' and 'sha512'
+ * @param {bool} opts.disable_warning_cyclic (default: false) disable warning message when cyclic reference is detected
  * @returns {string} the hello message
  */
 function checksum(value, opts = {}) {
@@ -97,7 +98,7 @@ function myChecksum(value, opts, cycman) {
           if (cycman.visit(el)) {
             hashValue = hashFunc(`${hashValue}${i}${myChecksum(el, opts, cycman)}`)
             cycman.leave(el)
-          } else {
+          } else if (!opts.disable_warning_cyclic) {
             console.warn(`cyclic reference detected at element #${i}: ${el}`)
           }
         })
@@ -114,7 +115,7 @@ function myChecksum(value, opts, cycman) {
         if (cycman.visit(obj)) {
           hashArr.push(myChecksum([key, obj], opts, cycman))
           cycman.leave(obj)
-        } else {
+        } else if (!opts.disable_warning_cyclic) {
           console.warn(`cyclic reference detected at element #${key}: ${obj}`)
         }
       }
@@ -135,7 +136,7 @@ function _checksumBuiltinObject(hashFunc, className, obj, opts, cycman) {
         if (cycman.visit(v)) {
           hashArr.push(myChecksum([k, v], opts, cycman))
           cycman.leave(v)
-        } else {
+        } else if (!opts.disable_warning_cyclic) {
           console.warn(`cyclic reference detected at element #${k}: ${v}`)
         }
       }
@@ -147,7 +148,7 @@ function _checksumBuiltinObject(hashFunc, className, obj, opts, cycman) {
         if (cycman.visit(item)) {
           hashArr.push(myChecksum(item, opts, cycman))
           cycman.leave(item)
-        } else {
+        } else if (!opts.disable_warning_cyclic) {
           console.warn(`cyclic reference detected at element: ${item}`)
         }
       }
