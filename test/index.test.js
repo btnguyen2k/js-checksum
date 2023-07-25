@@ -245,6 +245,10 @@ describe('checksum', () => {
       }
       rootCyclic.d = rootCyclic
       expect(checksum(root, opts)).toEqual(checksum(rootCyclic, opts))
+      if (opts) {
+        opts.disable_warning_cyclic = true
+      }
+      expect(checksum(root, opts)).toEqual(checksum(rootCyclic, opts))
     }
   })
 
@@ -257,6 +261,9 @@ describe('checksum', () => {
       rootCyclic2.push(rootCyclic2)
       rootCyclic2.push(true)
       expect(checksum(root, opts)).toEqual(checksum(rootCyclic, opts))
+      if (opts) {
+        opts.disable_warning_cyclic = true
+      }
       expect(checksum(root, opts)).not.toEqual(checksum(rootCyclic2, opts))
     }
   })
@@ -273,6 +280,10 @@ describe('checksum', () => {
       rootCyclic.set('a', 1.0)
       rootCyclic.set('d', rootCyclic)
       expect(checksum(root, opts)).toEqual(checksum(rootCyclic, opts))
+      if (opts) {
+        opts.disable_warning_cyclic = true
+      }
+      expect(checksum(root, opts)).toEqual(checksum(rootCyclic, opts))
     }
   })
 
@@ -281,6 +292,10 @@ describe('checksum', () => {
       const root = new Set([1, '2', true])
       const rootCyclic = new Set(['2', true, 1.0])
       rootCyclic.add(rootCyclic)
+      expect(checksum(root, opts)).toEqual(checksum(rootCyclic, opts))
+      if (opts) {
+        opts.disable_warning_cyclic = true
+      }
       expect(checksum(root, opts)).toEqual(checksum(rootCyclic, opts))
     }
   })
