@@ -1,6 +1,6 @@
 {
   "name": "@btnguyen2k/checksum",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Calculate checksum for any Javascript value",
   "type": "module",
   "main": "./lib/index.js",
