@@ -8,14 +8,6 @@ const sha1Hash = (value) => sha1(value).toString().toLowerCase()
 const sha256Hash = (value) => sha256(value).toString().toLowerCase()
 const sha512Hash = (value) => sha512(value).toString().toLowerCase()
 
-const prefixBoolean = '\x10'
-const prefixNumber = '\x11'
-const prefixSymbol = '\x12'
-const prefixFunction = '\x13'
-const prefixArray = '\x14'
-const prefixObject = '\x15'
-const prefixBuiltin = '\x16'
-
 /**
  * Calculate checksum value from a given value.
  * @param {*} value the value to calculate checksum
@@ -24,6 +16,47 @@ const prefixBuiltin = '\x16'
  * @returns {string} the hello message
  */
 function checksum(value, opts = {}) {
+  const cycman = new CyclicManager()
+  cycman.visit(value)
+  return myChecksum(value, opts, cycman)
+}
+
+const prefixBoolean = '\x10'
+const prefixNumber = '\x11'
+const prefixSymbol = '\x12'
+const prefixFunction = '\x13'
+const prefixArray = '\x14'
+const prefixObject = '\x15'
+const prefixBuiltin = '\x16'
+
+class CyclicManager {
+  constructor() {
+    this.stack = []
+    this.stackSet = new Set()
+  }
+
+  visit(value) {
+    if (value === undefined || value === null || typeof value !== 'object') {
+      return true
+    }
+    if (this.stackSet.has(value)) {
+      return false
+    }
+    this.stack.push(value)
+    this.stackSet.add(value)
+    return true
+  }
+
+  leave(value) {
+    if (value === undefined || value === null || typeof value !== 'object') {
+      return
+    }
+    this.stack.pop()
+    this.stackSet.delete(value)
+  }
+}
+
+function myChecksum(value, opts, cycman) {
   opts = opts || {}
   if (value === undefined || value === null) {
     return ''
@@ -60,27 +93,38 @@ function checksum(value, opts = {}) {
     case 'object': {
       if (Array.isArray(value)) {
         let hashValue = hashFunc(`${prefixArray}[]`)
-        for (const el of value) {
-          hashValue = hashFunc(`${hashValue}${checksum(el, opts)}`)
-        }
+        value.forEach((el, i) => {
+          if (cycman.visit(el)) {
+            hashValue = hashFunc(`${hashValue}${i}${myChecksum(el, opts, cycman)}`)
+            cycman.leave(el)
+          } else {
+            console.warn(`cyclic reference detected at element #${i}: ${el}`)
+          }
+        })
         return hashValue
       }
       const className = value.constructor.name
-      const _checksumBuiltInObject = _checksumBuiltinObject(hashFunc, className, value, opts)
+      const _checksumBuiltInObject = _checksumBuiltinObject(hashFunc, className, value, opts, cycman)
       if (_checksumBuiltInObject) {
         return _checksumBuiltInObject
       }
       const hashArr = []
       for (const key of Object.getOwnPropertyNames(value)) {
-        hashArr.push(checksum([key, value[key]], opts))
+        const obj = value[key]
+        if (cycman.visit(obj)) {
+          hashArr.push(myChecksum([key, obj], opts, cycman))
+          cycman.leave(obj)
+        } else {
+          console.warn(`cyclic reference detected at element #${key}: ${obj}`)
+        }
       }
-      return checksum([`${prefixObject}${className}`, ...hashArr.sort()], opts)
+      return myChecksum([`${prefixObject}${className}`, ...hashArr.sort()], opts, cycman)
     }
   }
   return hashFunc(value)
 }
 
-function _checksumBuiltinObject(hashFunc, className, obj, opts) {
+function _checksumBuiltinObject(hashFunc, className, obj, opts, cycman) {
   switch (className) {
     case 'Date':
     case 'RegExp':
@@ -88,16 +132,26 @@ function _checksumBuiltinObject(hashFunc, className, obj, opts) {
     case 'Map': {
       const hashArr = []
       for (const [k, v] of obj) {
-        hashArr.push(checksum([k, v], opts))
+        if (cycman.visit(v)) {
+          hashArr.push(myChecksum([k, v], opts, cycman))
+          cycman.leave(v)
+        } else {
+          console.warn(`cyclic reference detected at element #${k}: ${v}`)
+        }
       }
-      return checksum([`${prefixObject}${className}`, ...hashArr.sort()], opts)
+      return myChecksum([`${prefixObject}${className}`, ...hashArr.sort()], opts, cycman)
     }
     case 'Set': {
       const hashArr = []
       for (const item of obj) {
-        hashArr.push(checksum(item, opts))
+        if (cycman.visit(item)) {
+          hashArr.push(myChecksum(item, opts, cycman))
+          cycman.leave(item)
+        } else {
+          console.warn(`cyclic reference detected at element: ${item}`)
+        }
       }
-      return checksum([`${prefixObject}${className}`, ...hashArr.sort()], opts)
+      return myChecksum([`${prefixObject}${className}`, ...hashArr.sort()], opts, cycman)
     }
   }
   return false

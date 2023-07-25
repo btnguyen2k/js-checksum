@@ -231,6 +231,60 @@ describe('checksum', () => {
     }
   })
 
+  test('cyclic ref - object', () => {
+    for (const opts of optsList) {
+      const root = {
+        a: 1,
+        b: '2',
+        c: true,
+      }
+      const rootCyclic = {
+        c: true,
+        a: 1.0,
+        b: '2',
+      }
+      rootCyclic.d = rootCyclic
+      expect(checksum(root, opts)).toEqual(checksum(rootCyclic, opts))
+    }
+  })
+
+  test('cyclic ref - array', () => {
+    for (const opts of optsList) {
+      const root = [1, '2', true]
+      const rootCyclic = [1.0, '2', true]
+      rootCyclic.push(rootCyclic)
+      const rootCyclic2 = [1, '2']
+      rootCyclic2.push(rootCyclic2)
+      rootCyclic2.push(true)
+      expect(checksum(root, opts)).toEqual(checksum(rootCyclic, opts))
+      expect(checksum(root, opts)).not.toEqual(checksum(rootCyclic2, opts))
+    }
+  })
+
+  test('cyclic ref - map', () => {
+    for (const opts of optsList) {
+      const root = new Map()
+      root.set('a', 1)
+      root.set('b', '2')
+      root.set('c', true)
+      const rootCyclic = new Map()
+      rootCyclic.set('b', '2')
+      rootCyclic.set('c', true)
+      rootCyclic.set('a', 1.0)
+      rootCyclic.set('d', rootCyclic)
+      expect(checksum(root, opts)).toEqual(checksum(rootCyclic, opts))
+    }
+  })
+
+  test('cyclic ref - set', () => {
+    for (const opts of optsList) {
+      const root = new Set([1, '2', true])
+      const rootCyclic = new Set(['2', true, 1.0])
+      rootCyclic.add(rootCyclic)
+      expect(checksum(root, opts)).toEqual(checksum(rootCyclic, opts))
+    }
+  })
+
   class Base {
     constructor(a, b, c) {
       this.a = a
