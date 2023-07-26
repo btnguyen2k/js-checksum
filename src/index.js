@@ -41,6 +41,8 @@ class CyclicManager {
       return true
     }
     if (this.stackSet.has(value)) {
+      console.log('[DEBUG] cyclic reference detected:', value)
+      console.log('\t', this.stackSet)
       return false
     }
     this.stack.push(value)
@@ -113,7 +115,8 @@ function myChecksum(value, opts, cycman) {
       for (const key of Object.getOwnPropertyNames(value)) {
         const obj = value[key]
         if (cycman.visit(obj)) {
-          hashArr.push(myChecksum([key, obj], opts, cycman))
+          const arr = [myChecksum(key, opts, cycman), myChecksum(obj, opts, cycman)]
+          hashArr.push(myChecksum(arr, opts, cycman))
           cycman.leave(obj)
         } else if (!opts.disable_warning_cyclic) {
           console.warn(`cyclic reference detected at element #${key}: ${obj}`)
@@ -134,7 +137,8 @@ function _checksumBuiltinObject(hashFunc, className, obj, opts, cycman) {
       const hashArr = []
       for (const [k, v] of obj) {
         if (cycman.visit(v)) {
-          hashArr.push(myChecksum([k, v], opts, cycman))
+          const arr = [myChecksum(k, opts, cycman), myChecksum(v, opts, cycman)]
+          hashArr.push(myChecksum(arr, opts, cycman))
           cycman.leave(v)
         } else if (!opts.disable_warning_cyclic) {
           console.warn(`cyclic reference detected at element #${k}: ${v}`)
