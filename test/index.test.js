@@ -300,6 +300,32 @@ describe('checksum', () => {
     }
   })
 
+  test('no cyclic ref', () => {
+    for (const opts of optsList) {
+      const input1 = {
+        gfm: true,
+        headerIds: true,
+        headerPrefix: '',
+        mangle: true,
+        sanitize: false,
+        safety: true,
+        safety_opts: {add_tags: ['exec']},
+        inline: false
+      }
+      const input2 = {
+        gfm: true,
+        headerIds: true,
+        headerPrefix: '',
+        mangle: true,
+        sanitize: false,
+        safety: true,
+        safety_opts: {add_attrs: ['myattr']},
+        inline: false
+      }
+      expect(checksum(input1, opts)).not.toEqual(checksum(input2, opts))
+    }
+  })
+
   class Base {
     constructor(a, b, c) {
       this.a = a
